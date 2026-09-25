@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>TP02 · Ex5 — Déplacement avec aframe-physics-system</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <!-- aframe-physics-system (driver Cannon / cannon-es) -->
+  <script src="https://cdn.jsdelivr.net/npm/@c-frame/aframe-physics-system@4.2.4/dist/aframe-physics-system.min.js"></script>
+  <script src="js/components.js"></script>
+  <link rel="stylesheet" href="css/hud.css">
+</head>
+<body>
+  <a class="back" href="./">← TP02</a>
+  <div class="hud">
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> déplacer · <kbd>Espace</kbd> sauter (au sol uniquement, y compris sur une caisse) ·
+    <kbd>L</kbd> activer/désactiver le verrouillage de rotation (pour comparer)<br>
+    <span class="stat" id="stat"></span>
+  </div>
+
+  <!--
+    physics : gravité -20 (plus "arcade" que -9.8), frottement/rebond globaux.
+    Le moteur fait avancer le monde à chaque frame ; dynamic-body synchronise
+    ensuite la position/rotation calculées vers l'entité A-Frame.
+  -->
+  <a-scene renderer="antialias: true; anisotropy: 8" shadow="type: pcfsoft"
+           physics="driver: local; gravity: -20; friction: 0.06; restitution: 0.05">
+    <a-assets>
+      <img id="grass" src="assets/grass.jpg">
+      <img id="sky" src="assets/sky.jpg">
+    </a-assets>
+
+    <a-plane rotation="-90 0 0" width="200" height="200"
+             material="src: #grass; repeat: 50 50; roughness: 1" shadow="cast: false; receive: true"></a-plane>
+    <!-- collisionneur du sol : boîte statique fine, invisible, dont le dessus est à y = 0 -->
+    <a-box class="ground" static-body width="200" height="1" depth="200" position="0 -0.5 0" visible="false"></a-box>
+    <a-sky src="#sky"></a-sky>
+    <a-entity scenery></a-entity>
+
+    <a-entity light="type: ambient; intensity: 0.55"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048;
+                     shadowCameraLeft: -30; shadowCameraRight: 30; shadowCameraTop: 30; shadowCameraBottom: -30"
+              position="-8 15 6"></a-entity>
+
+    <!-- obstacles statiques pour tester la stabilité lors des impacts -->
+    <a-box static-body position="4 0.5 -3" width="1" height="1" depth="1" color="#8d6e63" shadow></a-box>
+    <a-box static-body position="5 1 -3" width="1" height="2" depth="1" color="#8d6e63" shadow></a-box>
+    <a-box static-body position="-5 0.75 -4" width="3" height="1.5" depth="0.5" color="#90a4ae" shadow></a-box>
+    <a-box static-body position="0 0.6 -9" rotation="20 0 0" width="3" height="0.3" depth="5" color="#b0bec5" shadow></a-box>
+
+    <!--
+      Joueur physique :
+      - dynamic-body : corps rigide (masse 5) soumis à la gravité et aux collisions
+      - physics-player : pilote la vitesse horizontale + saut, et stabilise la rotation
+        (angularFactor = 0 -> un choc ne fait pas basculer le cube)
+    -->
+    <a-box id="player" position="0 0.5 0" color="#ff7043" shadow="cast: true; receive: false"
+           dynamic-body="mass: 5; linearDamping: 0.05; angularDamping: 0.95"
+           physics-player="camera: #cam; speed: 6; accel: 25; decel: 15; jumpSpeed: 7.5"></a-box>
+
+    <a-entity id="cam" camera look-controls="enabled: false" wasd-controls="enabled: false"
+              orbit-follow="target: #player; distance: 10; elevation: 25"></a-entity>
+  </a-scene>
+
+  <script>
+    const player = document.querySelector('#player');
+    window.addEventListener('keydown', (e) => {
+      const pp = player.components['physics-player'];
+      if (e.code === 'KeyL' && player.body) {
+        // compare : sans verrou, les chocs font rouler/basculer le cube
+        const locked = player.body.angularFactor.x === 0;
+        player.body.angularFactor.set(locked ? 1 : 0, locked ? 1 : 0, locked ? 1 : 0);
+        pp.data.uprightStrength = locked ? 0 : 8;
+      }
+    });
+    const stat = document.querySelector('#stat');
+    setInterval(() => {
+      const pp = player.components['physics-player'];
+      if (!player.body || !pp) return;
+      const v = player.body.velocity;
+      const locked = player.body.angularFactor.x === 0;
+      stat.textContent = `vitesse ${Math.hypot(v.x, v.z).toFixed(2)} m/s · ${pp.grounded ? 'au sol' : 'en l’air'} · rotation ${locked ? 'verrouillée' : 'libre'}`;
+    }, 100);
+  </script>
+</body>
+</html>

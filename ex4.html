@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>TP02 · Ex4 — Déplacement relatif à la caméra</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="js/components.js"></script>
+  <link rel="stylesheet" href="css/hud.css">
+</head>
+<body>
+  <a class="back" href="./">← TP02</a>
+  <div class="hud">
+    <kbd>W</kbd> avance <b>dans la direction de la caméra</b> · <kbd>A</kbd>/<kbd>D</kbd> gauche/droite par rapport à la vue · <kbd>S</kbd> recule · <kbd>Espace</kbd> saut<br>
+    Orbite : clic gauche + glisser · Zoom : molette
+  </div>
+
+  <a-scene renderer="antialias: true; anisotropy: 8" shadow="type: pcfsoft">
+    <a-assets>
+      <img id="grass" src="assets/grass.jpg">
+      <img id="sky" src="assets/sky.jpg">
+    </a-assets>
+
+    <a-plane rotation="-90 0 0" width="200" height="200"
+             material="src: #grass; repeat: 50 50; roughness: 1" shadow="cast: false; receive: true"></a-plane>
+    <a-sky src="#sky"></a-sky>
+    <a-entity scenery></a-entity>
+
+    <a-entity light="type: ambient; intensity: 0.55"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048;
+                     shadowCameraLeft: -30; shadowCameraRight: 30; shadowCameraTop: 30; shadowCameraBottom: -30"
+              position="-8 15 6"></a-entity>
+
+    <!--
+      Seule différence avec l'Ex3 : player-move reçoit camera: #cam.
+      "Avant" = vecteur caméra -> joueur projeté sur le sol (Y = 0) puis normalisé,
+      "droite" = avant x haut. Les touches sont combinées dans ce repère.
+    -->
+    <a-box id="player" color="#ff7043" shadow="cast: true; receive: false" player-move="camera: #cam"></a-box>
+
+    <a-entity id="cam" camera look-controls="enabled: false" wasd-controls="enabled: false"
+              orbit-follow="target: #player; distance: 9; elevation: 25"></a-entity>
+  </a-scene>
+</body>
+</html>

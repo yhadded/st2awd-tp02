@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>TP02 · Ex1 — Plan herbe + skybox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <link rel="stylesheet" href="css/hud.css">
+</head>
+<body>
+  <a class="back" href="./">← TP02</a>
+  <div class="hud">Regarder : clic gauche + glisser · Se déplacer : <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> (<kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> en AZERTY)</div>
+
+  <a-scene renderer="antialias: true; anisotropy: 8">
+    <!-- Préchargement des textures (asset management system) -->
+    <a-assets>
+      <img id="grass" src="assets/grass.jpg">
+      <img id="sky" src="assets/sky.jpg">
+    </a-assets>
+
+    <!--
+      Sol : plan horizontal (rotation -90° sur X) de 200 x 200 unités.
+      repeat: 50 50 => la texture 512px est répétée 50 fois (1 tuile = 4 m) :
+      sans repeat elle serait étirée et floue. La texture est "tileable" (sans couture).
+    -->
+    <a-plane rotation="-90 0 0" width="200" height="200"
+             material="src: #grass; repeat: 50 50; roughness: 1"></a-plane>
+
+    <!--
+      Skybox : <a-sky> est une grande sphère inversée texturée par une image
+      panoramique équirectangulaire (ratio 2:1).
+    -->
+    <a-sky src="#sky"></a-sky>
+
+    <a-entity light="type: ambient; intensity: 0.6"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="-5 10 4"></a-entity>
+
+    <a-entity camera position="0 1.6 4" look-controls wasd-controls="acceleration: 40"></a-entity>
+  </a-scene>
+</body>
+</html>

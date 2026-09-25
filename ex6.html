@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>TP02 · Ex6 — Collisions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@c-frame/aframe-physics-system@4.2.4/dist/aframe-physics-system.min.js"></script>
+  <script src="js/components.js"></script>
+  <link rel="stylesheet" href="css/hud.css">
+</head>
+<body>
+  <a class="back" href="./">← TP02</a>
+  <div class="hud">
+    Poussez les cubes : <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> · sautez dessus : <kbd>Espace</kbd> · <kbd>R</kbd> réinitialiser les cubes<br>
+    Un cube percuté assez fort s'illumine (événement <code>collide</code>).
+  </div>
+
+  <a-scene renderer="antialias: true; anisotropy: 8" shadow="type: pcfsoft"
+           physics="driver: local; gravity: -20; friction: 0.06; restitution: 0.1">
+    <a-assets>
+      <img id="grass" src="assets/grass.jpg">
+      <img id="sky" src="assets/sky.jpg">
+    </a-assets>
+
+    <a-plane rotation="-90 0 0" width="200" height="200"
+             material="src: #grass; repeat: 50 50; roughness: 1" shadow="cast: false; receive: true"></a-plane>
+    <a-box class="ground" static-body width="200" height="1" depth="200" position="0 -0.5 0" visible="false"></a-box>
+    <a-sky src="#sky"></a-sky>
+    <a-entity scenery></a-entity>
+
+    <a-entity light="type: ambient; intensity: 0.55"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048;
+                     shadowCameraLeft: -30; shadowCameraRight: 30; shadowCameraTop: 30; shadowCameraBottom: -30"
+              position="-8 15 6"></a-entity>
+
+    <!-- les cubes "PNJ" sont créés par le script ci-dessous (anneau + pyramide) -->
+    <a-entity id="crates"></a-entity>
+
+    <!-- joueur : même masse que les autres cubes => échanges de quantité de mouvement cohérents -->
+    <a-box id="player" position="0 0.5 0" color="#ff7043" shadow="cast: true; receive: false"
+           dynamic-body="mass: 5; linearDamping: 0.05; angularDamping: 0.95"
+           physics-player="camera: #cam; speed: 6; accel: 25; decel: 15; jumpSpeed: 7.5"></a-box>
+
+    <a-entity id="cam" camera look-controls="enabled: false" wasd-controls="enabled: false"
+              orbit-follow="target: #player; distance: 11; elevation: 28"></a-entity>
+  </a-scene>
+
+  <script>
+    /*
+      Les cubes ont des propriétés physiques similaires au joueur (dynamic-body, masse 5,
+      mêmes amortissements, même matériau global) mais leur rotation est LIBRE :
+      ils roulent / basculent / s'empilent de façon réaliste.
+    */
+    const crates = document.querySelector('#crates');
+    const palette = ['#42a5f5', '#66bb6a', '#ffca28', '#ab47bc', '#26c6da', '#ec407a'];
+    const layout = [];
+    // anneau de 8 cubes autour du joueur
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      layout.push({ x: Math.cos(a) * 4, y: 0.5, z: Math.sin(a) * 4, s: 1 });
+    }
+    // petite pyramide (3 + 2 + 1) plus loin
+    [[-1, 0], [0, 0], [1, 0], [-0.5, 1], [0.5, 1], [0, 2]].forEach(([x, row]) =>
+      layout.push({ x: x * 1.02, y: 0.5 + row * 1.0, z: -8, s: 1 }));
+    // quelques cubes de tailles différentes (masse proportionnelle au volume)
+    layout.push({ x: 7, y: 0.35, z: 2, s: 0.7 }, { x: -7, y: 0.75, z: 1, s: 1.5 });
+
+    function spawnAll() {
+      crates.innerHTML = '';
+      layout.forEach((p, i) => {
+        const b = document.createElement('a-box');
+        b.setAttribute('position', `${p.x} ${p.y} ${p.z}`);
+        b.setAttribute('width', p.s); b.setAttribute('height', p.s); b.setAttribute('depth', p.s);
+        b.setAttribute('color', palette[i % palette.length]);
+        b.setAttribute('shadow', 'cast: true; receive: true');
+        b.setAttribute('dynamic-body', `mass: ${(5 * p.s ** 3).toFixed(2)}; linearDamping: 0.05; angularDamping: 0.3`);
+        b.setAttribute('hit-flash', '');
+        crates.appendChild(b);
+      });
+    }
+    document.querySelector('a-scene').addEventListener('loaded', spawnAll);
+    window.addEventListener('keydown', (e) => { if (e.code === 'KeyR') spawnAll(); });
+  </script>
+</body>
+</html>

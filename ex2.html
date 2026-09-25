@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>TP02 · Ex2 — Déplacement du cube</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="js/components.js"></script>
+  <link rel="stylesheet" href="css/hud.css">
+</head>
+<body>
+  <a class="back" href="./">← TP02</a>
+  <div class="hud">
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> déplacer (diagonales OK) · <kbd>Espace</kbd> sauter · <kbd>R</kbd> changer la taille du cube<br>
+    <span class="stat" id="stat"></span>
+  </div>
+
+  <a-scene renderer="antialias: true; anisotropy: 8" shadow="type: pcfsoft">
+    <a-assets>
+      <img id="grass" src="assets/grass.jpg">
+      <img id="sky" src="assets/sky.jpg">
+    </a-assets>
+
+    <a-plane rotation="-90 0 0" width="200" height="200"
+             material="src: #grass; repeat: 50 50; roughness: 1" shadow="cast: false; receive: true"></a-plane>
+    <a-sky src="#sky"></a-sky>
+    <a-entity scenery></a-entity>
+
+    <a-entity light="type: ambient; intensity: 0.55"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048;
+                     shadowCameraLeft: -30; shadowCameraRight: 30; shadowCameraTop: 30; shadowCameraBottom: -30"
+              position="-8 15 6"></a-entity>
+
+    <!--
+      Le joueur. Pas besoin de régler y : player-move calcule la demi-hauteur
+      (géométrie x échelle) et pose la face inférieure exactement sur le plan.
+    -->
+    <a-box id="player" color="#ff7043" shadow="cast: true; receive: false"
+           player-move="speed: 6; accel: 18; decel: 12; jumpSpeed: 7.5; gravity: 22"></a-box>
+
+    <!-- caméra fixe qui surplombe la zone -->
+    <a-entity camera position="0 9 14" rotation="-32 0 0"
+              look-controls="enabled: false" wasd-controls="enabled: false"></a-entity>
+  </a-scene>
+
+  <script>
+    // R : cycle de tailles -> démontre que le cube reste posé sur le plan quelle que soit sa taille
+    const sizes = [1, 2, 0.5, 1.5];
+    let si = 0;
+    const player = document.querySelector('#player');
+    window.addEventListener('keydown', (e) => {
+      if (e.code !== 'KeyR') return;
+      const s = sizes[++si % sizes.length];
+      player.setAttribute('geometry', { width: s, height: s, depth: s });
+    });
+    // petite ligne de debug : vitesse horizontale + état au sol
+    const stat = document.querySelector('#stat');
+    setInterval(() => {
+      const c = player.components['player-move'];
+      if (!c) return;
+      stat.textContent = `vitesse ${Math.hypot(c.vel.x, c.vel.z).toFixed(2)} m/s · ${c.grounded ? 'au sol' : 'en l’air'} · taille ${(c.halfHeight * 2).toFixed(1)}`;
+    }, 100);
+  </script>
+</body>
+</html>

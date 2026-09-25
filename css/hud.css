@@ -1,0 +1,15 @@
+body { margin: 0; overflow: hidden; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.hud {
+  position: fixed; left: 12px; bottom: 12px; z-index: 10; max-width: calc(100vw - 24px);
+  background: rgba(10, 12, 16, .7); color: #fff; font-size: 13px; line-height: 1.5;
+  padding: 8px 12px; border-radius: 10px; pointer-events: none;
+}
+.hud kbd {
+  display: inline-block; min-width: 18px; text-align: center; padding: 0 5px; margin: 0 1px;
+  border: 1px solid rgba(255,255,255,.45); border-bottom-width: 2px; border-radius: 4px; font: 12px/18px ui-monospace, monospace;
+}
+.hud .stat { opacity: .75; font-family: ui-monospace, monospace; }
+.back {
+  position: fixed; top: 12px; left: 12px; z-index: 10; color: #fff; text-decoration: none;
+  background: rgba(10, 12, 16, .7); padding: 6px 10px; border-radius: 8px; font-size: 14px;
+}
